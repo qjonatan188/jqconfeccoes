@@ -1,4 +1,3 @@
-// components/ProdutoInfo.tsx
 'use client'
 
 import { useState, useMemo } from 'react'
@@ -17,7 +16,6 @@ export default function ProdutoInfo({ produto }: { produto: any }) {
   const imagens = produto.produto_imagens || []
   const temPromocao = produto.preco_promocional && produto.preco_promocional < produto.preco
 
-  // 🔥 IMAGEM TROCA COM A COR
   const imagemAtual = useMemo(() => {
     const encontrada = imagens.find(
       (img: any) => img.cor?.toLowerCase().trim() === corSelecionada.toLowerCase().trim()
@@ -48,7 +46,6 @@ export default function ProdutoInfo({ produto }: { produto: any }) {
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
-      {/* IMAGEM - LADO ESQUERDO */}
       <div className="space-y-4">
         <div className="aspect-[3/4] rounded-lg overflow-hidden bg-gray-100">
           <img src={imagemAtual} alt={`${produto.nome} - ${corSelecionada}`} className="w-full h-full object-cover" />
@@ -65,10 +62,8 @@ export default function ProdutoInfo({ produto }: { produto: any }) {
         )}
       </div>
 
-      {/* INFORMAÇÕES - LADO DIREITO */}
       <div className="space-y-6">
         <h1 className="text-3xl font-bold text-gray-900">{produto.nome}</h1>
-        
         <div className="flex items-baseline gap-3">
           {temPromocao ? (
             <>
@@ -80,7 +75,6 @@ export default function ProdutoInfo({ produto }: { produto: any }) {
           )}
         </div>
 
-        {/* CORES */}
         {produto.cores?.length > 0 && (
           <div>
             <h3 className="text-sm font-semibold uppercase mb-3">Cor: <span className="font-normal text-gray-500">{corSelecionada}</span></h3>
@@ -93,7 +87,6 @@ export default function ProdutoInfo({ produto }: { produto: any }) {
           </div>
         )}
 
-        {/* TAMANHOS */}
         {produto.tamanhos?.length > 0 && (
           <div>
             <h3 className="text-sm font-semibold uppercase mb-3">Tamanho: <span className="font-normal text-gray-500">{tamanhoSelecionado}</span></h3>
@@ -106,7 +99,6 @@ export default function ProdutoInfo({ produto }: { produto: any }) {
           </div>
         )}
 
-        {/* QUANTIDADE */}
         <div>
           <h3 className="text-sm font-semibold uppercase mb-3">Quantidade</h3>
           <div className="flex items-center gap-4">
@@ -116,13 +108,11 @@ export default function ProdutoInfo({ produto }: { produto: any }) {
           </div>
         </div>
 
-        {/* SUBTOTAL */}
         <div className="bg-gray-50 rounded p-4">
           <span className="text-sm text-gray-500">Subtotal </span>
           <span className="text-xl font-bold text-gray-900">R$ {(precoFinal * quantidade).toFixed(2)}</span>
         </div>
 
-        {/* BOTÕES */}
         <div className="space-y-3">
           <button onClick={handleAdicionar}
             className={`w-full py-4 font-semibold text-sm uppercase ${adicionado ? 'bg-green-500 text-white' : 'bg-gray-900 text-white hover:bg-gray-800'}`}>

@@ -1,6 +1,6 @@
 import { supabase } from '@/lib/supabase'
 import Link from 'next/link'
-import ProdutoInfo from '@/components/ProdutoInfo'
+import ProdutoInfo from '@/components/produto-info'
 
 async function getProduto(slug: string) {
   const { data, error } = await supabase
