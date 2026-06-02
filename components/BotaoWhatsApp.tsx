@@ -4,46 +4,6 @@
 import { useState, useMemo } from 'react'
 import { useCarrinhoStore } from '@/lib/carrinhoStore'
 
-// Mapeamento de cores para hexadecimal
-const mapaCores: Record<string, string> = {
-  'preto': '#1a1a1a',
-  'branco': '#f5f5f5',
-  'vermelho': '#dc2626',
-  'azul': '#2563eb',
-  'azul céu': '#7dd3fc',
-  'rosa': '#ec4899',
-  'verde': '#16a34a',
-  'verde musgo': '#4d7c0f',
-  'amarelo': '#eab308',
-  'laranja': '#ea580c',
-  'roxo': '#7c3aed',
-  'vinho': '#7f1d1d',
-  'marrom': '#78350f',
-  'cinza': '#6b7280',
-  'bege': '#d6c8a5',
-  'cru': '#f5f0e8',
-  'champanhe': '#f7e7ce',
-  'caramelo': '#c68e58',
-  'lavanda': '#c4b5fd',
-  'salmão': '#fca5a5',
-  'marinho': '#1e3a5f',
-  'floral': '#f472b6',
-  'estampada': '#c084fc',
-}
-
-function getCorHex(cor: string): string {
-  const corLower = cor.toLowerCase().trim()
-  return mapaCores[corLower] || '#d1d5db'
-}
-
-function isCorClara(hex: string): boolean {
-  const r = parseInt(hex.slice(1, 3), 16)
-  const g = parseInt(hex.slice(3, 5), 16)
-  const b = parseInt(hex.slice(5, 7), 16)
-  const luminosidade = (r * 299 + g * 587 + b * 114) / 1000
-  return luminosidade > 150
-}
-
 interface ProdutoImagem {
   url: string
   alt_text: string
@@ -84,20 +44,12 @@ export default function BotaoWhatsApp({ produto, onCorChange }: BotaoWhatsAppPro
     if (onCorChange) onCorChange(cor)
   }
 
-  // Encontrar imagem da cor selecionada
   const imagemAtual = useMemo(() => {
     const imagens = produto.produto_imagens || []
-    
     const imagemDaCor = imagens.find(
       img => img.cor?.toLowerCase().trim() === corSelecionada.toLowerCase().trim()
     )
     if (imagemDaCor) return imagemDaCor.url
-
-    const imagemPorAlt = imagens.find(
-      img => img.alt_text?.toLowerCase().includes(corSelecionada.toLowerCase())
-    )
-    if (imagemPorAlt) return imagemPorAlt.url
-
     return imagens[0]?.url || '/placeholder.jpg'
   }, [corSelecionada, produto.produto_imagens])
 
@@ -138,7 +90,7 @@ export default function BotaoWhatsApp({ produto, onCorChange }: BotaoWhatsAppPro
 
   return (
     <div className="space-y-5">
-      {/* Preview da cor selecionada (mobile) */}
+      {/* Preview mobile */}
       <div className="aspect-[3/4] rounded-lg overflow-hidden bg-gray-100 md:hidden">
         <img
           src={imagemAtual}
@@ -153,48 +105,20 @@ export default function BotaoWhatsApp({ produto, onCorChange }: BotaoWhatsAppPro
           <h3 className="text-sm font-semibold uppercase tracking-wider text-gray-900 mb-3">
             Cor: <span className="font-normal text-gray-500">{corSelecionada}</span>
           </h3>
-          <div className="flex flex-wrap gap-3">
+          <div className="flex flex-wrap gap-2">
             {produto.cores.map((cor) => {
-              const hex = getCorHex(cor)
-              const clara = isCorClara(hex)
               const selecionada = corSelecionada === cor
-
-              const temImagem = produto.produto_imagens?.some(
-                img => img.cor?.toLowerCase().trim() === cor.toLowerCase().trim() ||
-                       img.alt_text?.toLowerCase().includes(cor.toLowerCase())
-              )
-
               return (
                 <button
                   key={cor}
                   onClick={() => handleCorChange(cor)}
-                  className="relative group"
-                  title={`${cor}${temImagem ? ' - tem foto' : ''}`}
+                  className={`px-4 py-2 rounded-full text-sm font-medium border-2 transition-all duration-200 ${
+                    selecionada
+                      ? 'border-gray-900 bg-gray-900 text-white'
+                      : 'border-gray-200 text-gray-600 hover:border-gray-400'
+                  }`}
                 >
-                  <div
-                    className={`w-10 h-10 rounded-full transition-all duration-200 ${
-                      selecionada
-                        ? 'ring-2 ring-offset-2 ring-gray-900 scale-110'
-                        : 'ring-1 ring-gray-200 hover:scale-110'
-                    }`}
-                    style={{ backgroundColor: hex }}
-                  >
-                    {selecionada && (
-                      <svg
-                        className={`w-5 h-5 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 ${
-                          clara ? 'text-gray-800' : 'text-white'
-                        }`}
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
-                      </svg>
-                    )}
-                  </div>
-                  {temImagem && (
-                    <span className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-white" />
-                  )}
+                  {cor}
                 </button>
               )
             })}
@@ -261,4 +185,33 @@ export default function BotaoWhatsApp({ produto, onCorChange }: BotaoWhatsAppPro
             {quantidade} × R$ {precoFinal.toFixed(2)}
           </p>
         )}
-     
+      </div>
+
+      {/* Botões */}
+      <div className="space-y-3 pt-2">
+        <button
+          onClick={handleAdicionarAoCarrinho}
+          className={`w-full py-4 font-semibold text-sm uppercase tracking-wider transition-all duration-300 ${
+            adicionado
+              ? 'bg-green-500 text-white'
+              : 'bg-gray-900 text-white hover:bg-gray-800'
+          }`}
+        >
+          {adicionado ? '✓ Adicionado à Sacola!' : 'Adicionar à Sacola'}
+        </button>
+
+        <a
+          href={`https://wa.me/${numeroWhatsApp}?text=${montarMensagemIndividual()}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="block w-full bg-green-600 text-white text-center py-4 font-semibold text-sm uppercase tracking-wider hover:bg-green-700 transition-all flex items-center justify-center gap-2"
+        >
+          <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347"/>
+          </svg>
+          Comprar Agora
+        </a>
+      </div>
+    </div>
+  )
+}
