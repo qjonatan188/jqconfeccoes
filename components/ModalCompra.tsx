@@ -16,28 +16,17 @@ export default function ModalCompra({ aberto, fechar, produto }: ModalCompraProp
   const [tamanho, setTamanho] = useState(produto?.tamanhos?.[0] || '')
   const [cor, setCor] = useState(produto?.cores?.[0] || '')
   const [quantidade, setQuantidade] = useState(1)
-
+  
   const adicionarItem = useCarrinhoStore((state) => state.adicionarItem)
   const preco = produto?.preco_promocional || produto?.preco || 0
   const imagens = produto?.produto_imagens || []
 
-  // 🔥 CALCULAR IMAGEM BASEADA NA COR SELECIONADA
+  // 🔥 IMAGEM TROCA COM A COR
   const imagemAtual = useMemo(() => {
-    if (!cor || imagens.length === 0) return '/placeholder.jpg'
-    
-    // Procurar imagem com a cor exata
     const encontrada = imagens.find(
-      (img: any) => img.cor && img.cor.toLowerCase().trim() === cor.toLowerCase().trim()
+      (img: any) => img.cor?.toLowerCase().trim() === cor.toLowerCase().trim()
     )
     if (encontrada) return encontrada.url
-
-    // Procurar no alt_text
-    const porAlt = imagens.find(
-      (img: any) => img.alt_text && img.alt_text.toLowerCase().includes(cor.toLowerCase())
-    )
-    if (porAlt) return porAlt.url
-
-    // Primeira imagem
     return imagens[0]?.url || '/placeholder.jpg'
   }, [cor, imagens])
 
@@ -73,18 +62,19 @@ export default function ModalCompra({ aberto, fechar, produto }: ModalCompraProp
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/50" onClick={fechar} />
-      <div className="relative bg-white rounded-2xl w-full max-w-sm p-6 shadow-xl max-h-[90vh] overflow-y-auto">
-        <button onClick={fechar} className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-2xl leading-none z-10">×</button>
+      
+      <div className="relative bg-white rounded-2xl w-full max-w-sm p-6 shadow-xl">
+        <button onClick={fechar} className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-2xl leading-none">×</button>
 
-        {/* IMAGEM QUE TROCA */}
+        {/* IMAGEM QUE TROCA COM A COR */}
         <div className="aspect-square rounded-xl overflow-hidden bg-gray-100 mb-4">
-          <img src={imagemAtual} alt={`${produto.nome} - ${cor}`} className="w-full h-full object-cover transition-all duration-300" />
+          <img src={imagemAtual} alt={`${produto.nome} - ${cor}`} className="w-full h-full object-cover" />
         </div>
 
         <h3 className="font-semibold text-gray-900">{produto.nome}</h3>
         <p className="text-lg font-bold text-gray-900 mt-1">R$ {preco.toFixed(2)}</p>
 
-        {/* Tamanho */}
+        {/* TAMANHO */}
         {produto.tamanhos?.length > 0 && (
           <div className="mt-4">
             <p className="text-xs font-medium text-gray-500 mb-2">TAMANHO</p>
@@ -97,7 +87,7 @@ export default function ModalCompra({ aberto, fechar, produto }: ModalCompraProp
           </div>
         )}
 
-        {/* COR - CLICAR AQUI TROCA A IMAGEM */}
+        {/* COR - CLICA E TROCA A IMAGEM */}
         {produto.cores?.length > 0 && (
           <div className="mt-4">
             <p className="text-xs font-medium text-gray-500 mb-2">COR: {cor}</p>
@@ -110,7 +100,7 @@ export default function ModalCompra({ aberto, fechar, produto }: ModalCompraProp
           </div>
         )}
 
-        {/* Quantidade */}
+        {/* QUANTIDADE */}
         <div className="mt-4 flex items-center justify-between">
           <p className="text-xs font-medium text-gray-500">QUANTIDADE</p>
           <div className="flex items-center gap-3">
@@ -120,8 +110,11 @@ export default function ModalCompra({ aberto, fechar, produto }: ModalCompraProp
           </div>
         </div>
 
-        {quantidade > 1 && <p className="text-xs text-gray-400 mt-2">{quantidade} × R$ {preco.toFixed(2)} = R$ {total.toFixed(2)}</p>}
+        {quantidade > 1 && (
+          <p className="text-xs text-gray-400 mt-2">{quantidade} × R$ {preco.toFixed(2)} = R$ {total.toFixed(2)}</p>
+        )}
 
+        {/* BOTÕES */}
         <div className="mt-5 space-y-2">
           <button onClick={handleAdicionar} className="w-full bg-gray-900 text-white py-3 rounded-xl text-sm font-medium hover:bg-gray-800 transition-colors">
             Adicionar à Sacola
