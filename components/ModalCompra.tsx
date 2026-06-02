@@ -1,7 +1,7 @@
 // components/ModalCompra.tsx
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState } from 'react'
 import { useCarrinhoStore } from '@/lib/carrinhoStore'
 
 const numeroWhatsApp = '5511998654952'
@@ -9,46 +9,28 @@ const numeroWhatsApp = '5511998654952'
 interface ModalCompraProps {
   aberto: boolean
   fechar: () => void
-  produto: {
-    id: number
-    nome: string
-    slug: string
-    preco: number
-    preco_promocional: number | null
-    tamanhos: string[]
-    cores: string[]
-    produto_imagens: { url: string; alt_text: string; cor?: string | null }[]
-  }
+  produto: any
 }
 
 export default function ModalCompra({ aberto, fechar, produto }: ModalCompraProps) {
-  const [tamanho, setTamanho] = useState(produto.tamanhos?.[0] || '')
-  const [cor, setCor] = useState(produto.cores?.[0] || '')
+  const [tamanho, setTamanho] = useState(produto?.tamanhos?.[0] || '')
+  const [cor, setCor] = useState(produto?.cores?.[0] || '')
   const [quantidade, setQuantidade] = useState(1)
   
   const adicionarItem = useCarrinhoStore((state) => state.adicionarItem)
-  const preco = produto.preco_promocional || produto.preco
+  const preco = produto?.preco_promocional || produto?.preco || 0
+  const imagens = produto?.produto_imagens || []
 
-  // 🔥 Imagem muda conforme a cor selecionada
-  const imagemAtual = useMemo(() => {
-    const imagens = produto.produto_imagens || []
-    
-    // Procura imagem com a cor exata
-    const imagemDaCor = imagens.find(
-      img => img.cor?.toLowerCase().trim() === cor.toLowerCase().trim()
+  // 🔥 Encontrar imagem pela cor
+  const getImagem = () => {
+    const encontrada = imagens.find(
+      (img: any) => img.cor?.toLowerCase() === cor.toLowerCase()
     )
-    if (imagemDaCor) return imagemDaCor.url
-
-    // Procura no alt_text
-    const imagemPorAlt = imagens.find(
-      img => img.alt_text?.toLowerCase().includes(cor.toLowerCase())
-    )
-    if (imagemPorAlt) return imagemPorAlt.url
-
-    // Primeira imagem
+    if (encontrada) return encontrada.url
     return imagens[0]?.url || '/placeholder.jpg'
-  }, [cor, produto.produto_imagens])
+  }
 
+  const imagemAtual = getImagem()
   const total = preco * quantidade
 
   const handleAdicionar = () => {
@@ -80,64 +62,44 @@ export default function ModalCompra({ aberto, fechar, produto }: ModalCompraProp
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      {/* Fundo escuro */}
       <div className="absolute inset-0 bg-black/50" onClick={fechar} />
       
-      {/* Modal */}
       <div className="relative bg-white rounded-2xl w-full max-w-sm p-6 shadow-xl max-h-[90vh] overflow-y-auto">
-        {/* Fechar */}
-        <button onClick={fechar} className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-2xl leading-none z-10">
-          ×
-        </button>
+        <button onClick={fechar} className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-2xl leading-none z-10">×</button>
 
-        {/* Imagem - MUDA COM A COR */}
+        {/* Imagem */}
         <div className="aspect-square rounded-xl overflow-hidden bg-gray-100 mb-4">
-          <img 
-            src={imagemAtual} 
-            alt={`${produto.nome} - ${cor}`} 
-            className="w-full h-full object-cover transition-all duration-300" 
-          />
+          <img src={imagemAtual} alt={`${produto.nome} - ${cor}`} className="w-full h-full object-cover" />
         </div>
 
-        {/* Nome e Preço */}
         <h3 className="font-semibold text-gray-900">{produto.nome}</h3>
         <p className="text-lg font-bold text-gray-900 mt-1">R$ {preco.toFixed(2)}</p>
 
         {/* Tamanho */}
-        {produto.tamanhos.length > 0 && (
+        {produto.tamanhos?.length > 0 && (
           <div className="mt-4">
             <p className="text-xs font-medium text-gray-500 mb-2">TAMANHO</p>
             <div className="flex gap-2">
-              {produto.tamanhos.map((t) => (
-                <button
-                  key={t}
-                  onClick={() => setTamanho(t)}
+              {produto.tamanhos.map((t: string) => (
+                <button key={t} onClick={() => setTamanho(t)}
                   className={`w-10 h-10 rounded-full text-sm font-medium border-2 transition-all ${
                     tamanho === t ? 'border-gray-900 bg-gray-900 text-white' : 'border-gray-200 text-gray-600'
-                  }`}
-                >
-                  {t}
-                </button>
+                  }`}>{t}</button>
               ))}
             </div>
           </div>
         )}
 
-        {/* Cor - MUDA A IMAGEM */}
-        {produto.cores.length > 0 && (
+        {/* Cor */}
+        {produto.cores?.length > 0 && (
           <div className="mt-4">
             <p className="text-xs font-medium text-gray-500 mb-2">COR: {cor}</p>
             <div className="flex flex-wrap gap-2">
-              {produto.cores.map((c) => (
-                <button
-                  key={c}
-                  onClick={() => setCor(c)}
+              {produto.cores.map((c: string) => (
+                <button key={c} onClick={() => setCor(c)}
                   className={`px-4 py-2 rounded-full text-sm font-medium border-2 transition-all ${
                     cor === c ? 'border-gray-900 bg-gray-900 text-white' : 'border-gray-200 text-gray-600'
-                  }`}
-                >
-                  {c}
-                </button>
+                  }`}>{c}</button>
               ))}
             </div>
           </div>
@@ -153,22 +115,16 @@ export default function ModalCompra({ aberto, fechar, produto }: ModalCompraProp
           </div>
         </div>
 
-        {/* Total */}
         {quantidade > 1 && (
           <p className="text-xs text-gray-400 mt-2">{quantidade} × R$ {preco.toFixed(2)} = R$ {total.toFixed(2)}</p>
         )}
 
-        {/* Botões */}
         <div className="mt-5 space-y-2">
           <button onClick={handleAdicionar} className="w-full bg-gray-900 text-white py-3 rounded-xl text-sm font-medium hover:bg-gray-800 transition-colors">
             Adicionar à Sacola
           </button>
-          <a
-            href={`https://wa.me/${numeroWhatsApp}?text=${mensagem}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="block w-full bg-green-600 text-white text-center py-3 rounded-xl text-sm font-medium hover:bg-green-700 transition-colors"
-          >
+          <a href={`https://wa.me/${numeroWhatsApp}?text=${mensagem}`} target="_blank" rel="noopener noreferrer"
+            className="block w-full bg-green-600 text-white text-center py-3 rounded-xl text-sm font-medium hover:bg-green-700 transition-colors">
             Comprar Agora
           </a>
         </div>
