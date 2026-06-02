@@ -45,16 +45,17 @@ export default function ProdutoInfo({ produto }: { produto: any }) {
   )
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
-      <div className="space-y-4">
+    <div className="flex flex-col md:flex-row gap-8">
+      {/* IMAGEM - ESQUERDA */}
+      <div className="md:w-1/2 space-y-3">
         <div className="aspect-[3/4] rounded-lg overflow-hidden bg-gray-100">
           <img src={imagemAtual} alt={`${produto.nome} - ${corSelecionada}`} className="w-full h-full object-cover" />
         </div>
         {imagens.length > 1 && (
-          <div className="grid grid-cols-4 gap-2">
+          <div className="flex gap-2 overflow-x-auto">
             {imagens.map((img: any, i: number) => (
               <button key={i} onClick={() => setCorSelecionada(img.cor || '')}
-                className={`aspect-square rounded overflow-hidden bg-gray-100 border-2 ${(img.cor || '').toLowerCase() === corSelecionada.toLowerCase() ? 'border-gray-900' : 'border-transparent'}`}>
+                className={`w-16 h-20 flex-shrink-0 rounded overflow-hidden bg-gray-100 border-2 ${(img.cor || '').toLowerCase() === corSelecionada.toLowerCase() ? 'border-gray-900' : 'border-transparent'}`}>
                 <img src={img.url} alt="" className="w-full h-full object-cover" />
               </button>
             ))}
@@ -62,8 +63,10 @@ export default function ProdutoInfo({ produto }: { produto: any }) {
         )}
       </div>
 
-      <div className="space-y-6">
+      {/* INFORMAÇÕES - DIREITA */}
+      <div className="md:w-1/2 space-y-5">
         <h1 className="text-3xl font-bold text-gray-900">{produto.nome}</h1>
+        
         <div className="flex items-baseline gap-3">
           {temPromocao ? (
             <>
@@ -75,9 +78,10 @@ export default function ProdutoInfo({ produto }: { produto: any }) {
           )}
         </div>
 
+        {/* CORES */}
         {produto.cores?.length > 0 && (
           <div>
-            <h3 className="text-sm font-semibold uppercase mb-3">Cor: <span className="font-normal text-gray-500">{corSelecionada}</span></h3>
+            <h3 className="text-sm font-semibold uppercase mb-2">Cor: {corSelecionada}</h3>
             <div className="flex flex-wrap gap-2">
               {produto.cores.map((cor: string) => (
                 <button key={cor} onClick={() => setCorSelecionada(cor)}
@@ -87,9 +91,10 @@ export default function ProdutoInfo({ produto }: { produto: any }) {
           </div>
         )}
 
+        {/* TAMANHOS */}
         {produto.tamanhos?.length > 0 && (
           <div>
-            <h3 className="text-sm font-semibold uppercase mb-3">Tamanho: <span className="font-normal text-gray-500">{tamanhoSelecionado}</span></h3>
+            <h3 className="text-sm font-semibold uppercase mb-2">Tamanho: {tamanhoSelecionado}</h3>
             <div className="flex flex-wrap gap-2">
               {produto.tamanhos.map((t: string) => (
                 <button key={t} onClick={() => setTamanhoSelecionado(t)}
@@ -99,8 +104,9 @@ export default function ProdutoInfo({ produto }: { produto: any }) {
           </div>
         )}
 
+        {/* QUANTIDADE */}
         <div>
-          <h3 className="text-sm font-semibold uppercase mb-3">Quantidade</h3>
+          <h3 className="text-sm font-semibold uppercase mb-2">Quantidade</h3>
           <div className="flex items-center gap-4">
             <button onClick={() => setQuantidade(Math.max(1, quantidade - 1))} className="w-10 h-10 border-2 border-gray-200 rounded-full text-lg">−</button>
             <span className="text-lg font-medium w-8 text-center">{quantidade}</span>
@@ -108,11 +114,13 @@ export default function ProdutoInfo({ produto }: { produto: any }) {
           </div>
         </div>
 
+        {/* SUBTOTAL */}
         <div className="bg-gray-50 rounded p-4">
           <span className="text-sm text-gray-500">Subtotal </span>
           <span className="text-xl font-bold text-gray-900">R$ {(precoFinal * quantidade).toFixed(2)}</span>
         </div>
 
+        {/* BOTÕES */}
         <div className="space-y-3">
           <button onClick={handleAdicionar}
             className={`w-full py-4 font-semibold text-sm uppercase ${adicionado ? 'bg-green-500 text-white' : 'bg-gray-900 text-white hover:bg-gray-800'}`}>
