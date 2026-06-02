@@ -71,16 +71,19 @@ export default function Cabecalho() {
           {/* Menu Direito */}
           <div className="flex items-center gap-6">
             <Link 
-              href="/carrinho" 
-              className="relative text-sm tracking-[0.2em] uppercase text-gray-600 hover:text-gray-900 transition-colors font-medium"
-            >
-              Sacola
-              {isClient && totalItens() > 0 && ( // ✅ Só mostra no cliente
-                <span className="absolute -top-2 -right-5 bg-pink-600 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center font-bold">
-                  {totalItens()}
-                </span>
-              )}
-            </Link>
+  href="/carrinho" 
+  className="relative text-gray-600 hover:text-gray-900 transition-colors"
+  title="Carrinho"
+>
+  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 100 4 2 2 0 000-4z" />
+  </svg>
+  {isClient && totalItens() > 0 && (
+    <span className="absolute -top-2 -right-3 bg-gray-900 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center font-bold">
+      {totalItens()}
+    </span>
+  )}
+</Link>
           </div>
         </div>
 
@@ -100,9 +103,12 @@ export default function Cabecalho() {
               <Link href="/loja?categoria=conjuntos" className="text-base text-gray-600 hover:text-gray-900 transition-colors py-2">
                 Conjuntos
               </Link>
-              <Link href="/carrinho" className="text-base text-gray-600 hover:text-gray-900 transition-colors py-2">
-                Sacola {isClient && totalItens() > 0 && `(${totalItens()})`}
-              </Link>
+              <Link href="/carrinho" className="text-base text-gray-600 hover:text-gray-900 transition-colors py-2 flex items-center gap-2">
+  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 100 4 2 2 0 000-4z" />
+  </svg>
+  Carrinho {isClient && totalItens() > 0 && `(${totalItens()})`}
+</Link>
             </nav>
           </div>
         )}
