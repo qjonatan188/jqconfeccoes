@@ -14,6 +14,7 @@ interface Categoria {
 
 interface CorImagem {
   cor: string
+  hex: string
   url: string
 }
 
@@ -21,7 +22,7 @@ export default function NovoProduto() {
   const [categorias, setCategorias] = useState<Categoria[]>([])
   const [salvando, setSalvando] = useState(false)
   const [mensagem, setMensagem] = useState('')
-  const [coresImagens, setCoresImagens] = useState<CorImagem[]>([{ cor: '', url: '' }])
+  const [coresImagens, setCoresImagens] = useState<CorImagem[]>([])
   const [tamanhos, setTamanhos] = useState('')
 
   const [form, setForm] = useState({
@@ -60,21 +61,18 @@ export default function NovoProduto() {
     setForm({ ...form, nome, slug: gerarSlug(nome) })
   }
 
-  // Atualizar cor/imagem
-  const atualizarCorImagem = (index: number, campo: 'cor' | 'url', valor: string) => {
+  const adicionarCor = () => {
+    setCoresImagens([...coresImagens, { cor: '', hex: '#1a1a1a', url: '' }])
+  }
+
+  const removerCor = (index: number) => {
+    setCoresImagens(coresImagens.filter((_, i) => i !== index))
+  }
+
+  const atualizarCor = (index: number, campo: 'cor' | 'hex' | 'url', valor: string) => {
     const novas = [...coresImagens]
     novas[index][campo] = valor
     setCoresImagens(novas)
-  }
-
-  const adicionarCorImagem = () => {
-    setCoresImagens([...coresImagens, { cor: '', url: '' }])
-  }
-
-  const removerCorImagem = (index: number) => {
-    if (coresImagens.length > 1) {
-      setCoresImagens(coresImagens.filter((_, i) => i !== index))
-    }
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -82,12 +80,10 @@ export default function NovoProduto() {
     setSalvando(true)
     setMensagem('')
 
-    // Pegar cores (sem vazias)
-    const cores = coresImagens
+    const coresNomes = coresImagens
       .filter(c => c.cor.trim())
       .map(c => c.cor.trim())
 
-    // Inserir produto
     const { data: produto, error } = await supabase
       .from('produtos')
       .insert({
@@ -98,7 +94,7 @@ export default function NovoProduto() {
         preco_promocional: form.preco_promocional ? parseFloat(form.preco_promocional) : null,
         categoria_id: parseInt(form.categoria_id) || null,
         tamanhos: tamanhos ? tamanhos.split(',').map(s => s.trim()) : [],
-        cores: cores,
+        cores: coresNomes,
         composicao: form.composicao || null,
         instrucoes_lavagem: form.instrucoes_lavagem || null,
         em_estoque: form.em_estoque,
@@ -113,7 +109,6 @@ export default function NovoProduto() {
       return
     }
 
-    // Inserir imagens
     if (produto) {
       const imagensParaInserir = coresImagens
         .filter(c => c.url.trim() && c.cor.trim())
@@ -132,7 +127,7 @@ export default function NovoProduto() {
 
     setMensagem('Produto criado com sucesso!')
     setSalvando(false)
-    setCoresImagens([{ cor: '', url: '' }])
+    setCoresImagens([])
     setTamanhos('')
     setForm({
       nome: '',
@@ -210,38 +205,54 @@ export default function NovoProduto() {
             {/* 🎨 CORES + IMAGENS */}
             <div className="border-t pt-6">
               <div className="flex items-center justify-between mb-4">
-                <label className="text-sm font-medium text-gray-700">🎨 Cores e Imagens</label>
-                <button type="button" onClick={adicionarCorImagem} className="text-sm text-gray-600 hover:text-gray-900 border border-gray-300 px-3 py-1 rounded-lg">
+                <label className="text-sm font-medium text-gray-700">🎨 Cores do Produto</label>
+                <button type="button" onClick={adicionarCor} className="text-sm text-gray-600 hover:text-gray-900 border border-gray-300 px-3 py-1 rounded-lg">
                   + Adicionar Cor
                 </button>
               </div>
 
-              <div className="space-y-3">
+              {coresImagens.length === 0 && (
+                <p className="text-sm text-gray-400 text-center py-4">Nenhuma cor adicionada. Clique em "+ Adicionar Cor".</p>
+              )}
+
+              <div className="space-y-4">
                 {coresImagens.map((item, index) => (
-                  <div key={index} className="flex gap-3 items-start p-4 bg-gray-50 rounded-xl">
-                    <div className="w-40">
-                      <label className="block text-xs text-gray-500 mb-1">Nome da Cor</label>
+                  <div key={index} className="flex gap-4 items-center p-4 bg-gray-50 rounded-xl">
+                    {/* Color Picker */}
+                    <div className="flex-shrink-0">
+                      <input
+                        type="color"
+                        value={item.hex}
+                        onChange={(e) => atualizarCor(index, 'hex', e.target.value)}
+                        className="w-10 h-10 rounded-full border-2 border-gray-200 cursor-pointer"
+                        title="Escolher cor"
+                      />
+                    </div>
+
+                    {/* Nome da Cor */}
+                    <div className="w-36">
                       <input
                         type="text"
                         value={item.cor}
-                        onChange={(e) => atualizarCorImagem(index, 'cor', e.target.value)}
-                        className="w-full px-4 py-2 rounded-xl border-2 border-gray-200 focus:border-gray-900 outline-none text-sm"
-                        placeholder="Ex: Preto"
+                        onChange={(e) => atualizarCor(index, 'cor', e.target.value)}
+                        className="w-full px-3 py-2 rounded-lg border-2 border-gray-200 focus:border-gray-900 outline-none text-sm"
+                        placeholder="Nome da cor"
                       />
                     </div>
+
+                    {/* URL da Imagem */}
                     <div className="flex-1">
-                      <label className="block text-xs text-gray-500 mb-1">URL da Imagem</label>
                       <input
                         type="url"
                         value={item.url}
-                        onChange={(e) => atualizarCorImagem(index, 'url', e.target.value)}
-                        className="w-full px-4 py-2 rounded-xl border-2 border-gray-200 focus:border-gray-900 outline-none text-sm"
-                        placeholder="https://i.ibb.co/foto-preta.jpg"
+                        onChange={(e) => atualizarCor(index, 'url', e.target.value)}
+                        className="w-full px-3 py-2 rounded-lg border-2 border-gray-200 focus:border-gray-900 outline-none text-sm"
+                        placeholder="URL da imagem"
                       />
                     </div>
-                    {coresImagens.length > 1 && (
-                      <button type="button" onClick={() => removerCorImagem(index)} className="mt-6 text-gray-400 hover:text-red-500 p-2 text-lg">×</button>
-                    )}
+
+                    {/* Remover */}
+                    <button type="button" onClick={() => removerCor(index)} className="text-gray-400 hover:text-red-500 text-xl">×</button>
                   </div>
                 ))}
               </div>
