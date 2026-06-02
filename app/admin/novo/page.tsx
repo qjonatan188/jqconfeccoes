@@ -80,10 +80,12 @@ export default function NovoProduto() {
     setSalvando(true)
     setMensagem('')
 
+    // 🔥 Pegar nomes das cores
     const coresNomes = coresImagens
-      .filter(c => c.cor.trim())
+      .filter(c => c.cor.trim() !== '')
       .map(c => c.cor.trim())
 
+    // Inserir produto
     const { data: produto, error } = await supabase
       .from('produtos')
       .insert({
@@ -109,19 +111,25 @@ export default function NovoProduto() {
       return
     }
 
+    // 🔥 Inserir imagens COM O CAMPO COR PREENCHIDO
     if (produto) {
       const imagensParaInserir = coresImagens
-        .filter(c => c.url.trim() && c.cor.trim())
+        .filter(c => c.url.trim() !== '' && c.cor.trim() !== '')
         .map((c, index) => ({
           produto_id: produto.id,
           url: c.url.trim(),
           alt_text: `${form.nome} ${c.cor.trim()}`,
-          cor: c.cor.trim(),
+          cor: c.cor.trim(), // 🔥 AQUI: preenche o campo cor
           ordem: index + 1,
         }))
 
+      console.log('Inserindo imagens:', imagensParaInserir) // Debug
+
       if (imagensParaInserir.length > 0) {
-        await supabase.from('produto_imagens').insert(imagensParaInserir)
+        const { error: imgError } = await supabase.from('produto_imagens').insert(imagensParaInserir)
+        if (imgError) {
+          console.error('Erro ao inserir imagens:', imgError)
+        }
       }
     }
 
@@ -236,7 +244,7 @@ export default function NovoProduto() {
                         value={item.cor}
                         onChange={(e) => atualizarCor(index, 'cor', e.target.value)}
                         className="w-full px-3 py-2 rounded-lg border-2 border-gray-200 focus:border-gray-900 outline-none text-sm"
-                        placeholder="Nome da cor"
+                        placeholder="Ex: Preto"
                       />
                     </div>
 
