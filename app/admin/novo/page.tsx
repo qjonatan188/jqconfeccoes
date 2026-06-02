@@ -12,18 +12,17 @@ interface Categoria {
   slug: string
 }
 
-interface ImagemCor {
-  url: string
+interface CorImagem {
   cor: string
+  url: string
 }
 
 export default function NovoProduto() {
   const [categorias, setCategorias] = useState<Categoria[]>([])
   const [salvando, setSalvando] = useState(false)
   const [mensagem, setMensagem] = useState('')
-  const [coresSelecionadas, setCoresSelecionadas] = useState<string[]>([])
-  const [novaCor, setNovaCor] = useState('')
-  const [imagens, setImagens] = useState<ImagemCor[]>([{ url: '', cor: '' }])
+  const [coresImagens, setCoresImagens] = useState<CorImagem[]>([{ cor: '', url: '' }])
+  const [tamanhos, setTamanhos] = useState('')
 
   const [form, setForm] = useState({
     nome: '',
@@ -32,7 +31,6 @@ export default function NovoProduto() {
     preco: '',
     preco_promocional: '',
     categoria_id: '',
-    tamanhos: '',
     composicao: '',
     instrucoes_lavagem: '',
     em_estoque: true,
@@ -62,33 +60,20 @@ export default function NovoProduto() {
     setForm({ ...form, nome, slug: gerarSlug(nome) })
   }
 
-  // Cores
-  const adicionarCor = () => {
-    const cor = novaCor.trim()
-    if (cor && !coresSelecionadas.includes(cor)) {
-      setCoresSelecionadas([...coresSelecionadas, cor])
-      setNovaCor('')
-    }
+  // Atualizar cor/imagem
+  const atualizarCorImagem = (index: number, campo: 'cor' | 'url', valor: string) => {
+    const novas = [...coresImagens]
+    novas[index][campo] = valor
+    setCoresImagens(novas)
   }
 
-  const removerCor = (cor: string) => {
-    setCoresSelecionadas(coresSelecionadas.filter(c => c !== cor))
+  const adicionarCorImagem = () => {
+    setCoresImagens([...coresImagens, { cor: '', url: '' }])
   }
 
-  // Imagens
-  const atualizarImagem = (index: number, campo: 'url' | 'cor', valor: string) => {
-    const novasImagens = [...imagens]
-    novasImagens[index][campo] = valor
-    setImagens(novasImagens)
-  }
-
-  const adicionarImagem = () => {
-    setImagens([...imagens, { url: '', cor: '' }])
-  }
-
-  const removerImagem = (index: number) => {
-    if (imagens.length > 1) {
-      setImagens(imagens.filter((_, i) => i !== index))
+  const removerCorImagem = (index: number) => {
+    if (coresImagens.length > 1) {
+      setCoresImagens(coresImagens.filter((_, i) => i !== index))
     }
   }
 
@@ -96,6 +81,11 @@ export default function NovoProduto() {
     e.preventDefault()
     setSalvando(true)
     setMensagem('')
+
+    // Pegar cores (sem vazias)
+    const cores = coresImagens
+      .filter(c => c.cor.trim())
+      .map(c => c.cor.trim())
 
     // Inserir produto
     const { data: produto, error } = await supabase
@@ -107,8 +97,8 @@ export default function NovoProduto() {
         preco: parseFloat(form.preco),
         preco_promocional: form.preco_promocional ? parseFloat(form.preco_promocional) : null,
         categoria_id: parseInt(form.categoria_id) || null,
-        tamanhos: form.tamanhos ? form.tamanhos.split(',').map(s => s.trim()) : [],
-        cores: coresSelecionadas,
+        tamanhos: tamanhos ? tamanhos.split(',').map(s => s.trim()) : [],
+        cores: cores,
         composicao: form.composicao || null,
         instrucoes_lavagem: form.instrucoes_lavagem || null,
         em_estoque: form.em_estoque,
@@ -123,15 +113,15 @@ export default function NovoProduto() {
       return
     }
 
-    // Inserir imagens com cor
+    // Inserir imagens
     if (produto) {
-      const imagensParaInserir = imagens
-        .filter(img => img.url.trim())
-        .map((img, index) => ({
+      const imagensParaInserir = coresImagens
+        .filter(c => c.url.trim() && c.cor.trim())
+        .map((c, index) => ({
           produto_id: produto.id,
-          url: img.url.trim(),
-          alt_text: `${form.nome} ${img.cor.trim() || ''}`.trim(),
-          cor: img.cor.trim() || null,
+          url: c.url.trim(),
+          alt_text: `${form.nome} ${c.cor.trim()}`,
+          cor: c.cor.trim(),
           ordem: index + 1,
         }))
 
@@ -142,8 +132,8 @@ export default function NovoProduto() {
 
     setMensagem('Produto criado com sucesso!')
     setSalvando(false)
-    setCoresSelecionadas([])
-    setImagens([{ url: '', cor: '' }])
+    setCoresImagens([{ cor: '', url: '' }])
+    setTamanhos('')
     setForm({
       nome: '',
       slug: '',
@@ -151,7 +141,6 @@ export default function NovoProduto() {
       preco: '',
       preco_promocional: '',
       categoria_id: '',
-      tamanhos: '',
       composicao: '',
       instrucoes_lavagem: '',
       em_estoque: true,
@@ -166,26 +155,20 @@ export default function NovoProduto() {
       <div className="min-h-screen bg-gray-50">
         <header className="bg-white border-b border-gray-200">
           <div className="max-w-4xl mx-auto px-6 py-4 flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <Link href="/admin/dashboard" className="text-gray-500 hover:text-gray-900">
-                ← Voltar
-              </Link>
-              <h1 className="text-lg font-semibold text-gray-900">Novo Produto</h1>
-            </div>
+            <Link href="/admin/dashboard" className="text-gray-500 hover:text-gray-900">← Voltar</Link>
+            <h1 className="text-lg font-semibold text-gray-900">Novo Produto</h1>
           </div>
         </header>
 
         <div className="max-w-4xl mx-auto px-6 py-8">
           {mensagem && (
-            <div className={`mb-6 px-4 py-3 rounded-xl text-sm ${
-              mensagem.includes('Erro') ? 'bg-red-50 text-red-600' : 'bg-green-50 text-green-600'
-            }`}>
+            <div className={`mb-6 px-4 py-3 rounded-xl text-sm ${mensagem.includes('Erro') ? 'bg-red-50 text-red-600' : 'bg-green-50 text-green-600'}`}>
               {mensagem}
             </div>
           )}
 
           <form onSubmit={handleSubmit} className="bg-white rounded-2xl shadow-sm p-8 space-y-6">
-            {/* Dados Básicos */}
+            {/* Nome e Slug */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Nome *</label>
@@ -194,6 +177,18 @@ export default function NovoProduto() {
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Slug</label>
                 <input type="text" value={form.slug} onChange={(e) => setForm({ ...form, slug: e.target.value })} className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-gray-900 outline-none text-sm bg-gray-50" />
+              </div>
+            </div>
+
+            {/* Preço e Categoria */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Preço *</label>
+                <input type="number" step="0.01" value={form.preco} onChange={(e) => setForm({ ...form, preco: e.target.value })} required className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-gray-900 outline-none text-sm" placeholder="89.90" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Preço Promocional</label>
+                <input type="number" step="0.01" value={form.preco_promocional} onChange={(e) => setForm({ ...form, preco_promocional: e.target.value })} className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-gray-900 outline-none text-sm" placeholder="69.90" />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Categoria</label>
@@ -204,102 +199,48 @@ export default function NovoProduto() {
                   ))}
                 </select>
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Preço *</label>
-                <input type="number" step="0.01" value={form.preco} onChange={(e) => setForm({ ...form, preco: e.target.value })} required className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-gray-900 outline-none text-sm" placeholder="89.90" />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Preço Promocional</label>
-                <input type="number" step="0.01" value={form.preco_promocional} onChange={(e) => setForm({ ...form, preco_promocional: e.target.value })} className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-gray-900 outline-none text-sm" placeholder="69.90" />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Tamanhos (separados por vírgula)</label>
-                <input type="text" value={form.tamanhos} onChange={(e) => setForm({ ...form, tamanhos: e.target.value })} className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-gray-900 outline-none text-sm" placeholder="P, M, G, GG" />
-              </div>
             </div>
 
-            {/* Cores */}
-            <div className="border-t pt-6">
-              <label className="block text-sm font-medium text-gray-700 mb-3">Cores do Produto</label>
-              
-              <div className="flex gap-2 mb-3">
-                <input
-                  type="text"
-                  value={novaCor}
-                  onChange={(e) => setNovaCor(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), adicionarCor())}
-                  className="flex-1 px-4 py-2 rounded-xl border-2 border-gray-200 focus:border-gray-900 outline-none text-sm"
-                  placeholder="Ex: Preto"
-                />
-                <button type="button" onClick={adicionarCor} className="px-6 py-2 bg-gray-900 text-white rounded-xl text-sm font-medium hover:bg-gray-800">
-                  Adicionar
-                </button>
-              </div>
-
-              {coresSelecionadas.length > 0 && (
-                <div className="flex flex-wrap gap-2">
-                  {coresSelecionadas.map((cor) => (
-                    <span key={cor} className="inline-flex items-center gap-2 px-3 py-1.5 bg-gray-100 rounded-full text-sm">
-                      {cor}
-                      <button type="button" onClick={() => removerCor(cor)} className="text-gray-400 hover:text-red-500">×</button>
-                    </span>
-                  ))}
-                </div>
-              )}
+            {/* Tamanhos */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Tamanhos (separados por vírgula)</label>
+              <input type="text" value={tamanhos} onChange={(e) => setTamanhos(e.target.value)} className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-gray-900 outline-none text-sm" placeholder="P, M, G, GG" />
             </div>
 
-            {/* 📸 IMAGENS POR COR */}
+            {/* 🎨 CORES + IMAGENS */}
             <div className="border-t pt-6">
-              <div className="flex items-center justify-between mb-3">
-                <label className="block text-sm font-medium text-gray-700">
-                  📸 Imagens do Produto (uma para cada cor)
-                </label>
-                <button
-                  type="button"
-                  onClick={adicionarImagem}
-                  className="text-sm text-gray-600 hover:text-gray-900 border border-gray-300 px-3 py-1 rounded-lg"
-                >
-                  + Adicionar Imagem
+              <div className="flex items-center justify-between mb-4">
+                <label className="text-sm font-medium text-gray-700">🎨 Cores e Imagens</label>
+                <button type="button" onClick={adicionarCorImagem} className="text-sm text-gray-600 hover:text-gray-900 border border-gray-300 px-3 py-1 rounded-lg">
+                  + Adicionar Cor
                 </button>
               </div>
 
               <div className="space-y-3">
-                {imagens.map((img, index) => (
-                  <div key={index} className="flex gap-3 items-start p-3 bg-gray-50 rounded-xl">
+                {coresImagens.map((item, index) => (
+                  <div key={index} className="flex gap-3 items-start p-4 bg-gray-50 rounded-xl">
+                    <div className="w-40">
+                      <label className="block text-xs text-gray-500 mb-1">Nome da Cor</label>
+                      <input
+                        type="text"
+                        value={item.cor}
+                        onChange={(e) => atualizarCorImagem(index, 'cor', e.target.value)}
+                        className="w-full px-4 py-2 rounded-xl border-2 border-gray-200 focus:border-gray-900 outline-none text-sm"
+                        placeholder="Ex: Preto"
+                      />
+                    </div>
                     <div className="flex-1">
                       <label className="block text-xs text-gray-500 mb-1">URL da Imagem</label>
                       <input
                         type="url"
-                        value={img.url}
-                        onChange={(e) => atualizarImagem(index, 'url', e.target.value)}
+                        value={item.url}
+                        onChange={(e) => atualizarCorImagem(index, 'url', e.target.value)}
                         className="w-full px-4 py-2 rounded-xl border-2 border-gray-200 focus:border-gray-900 outline-none text-sm"
-                        placeholder="https://i.ibb.co/sua-foto.jpg"
+                        placeholder="https://i.ibb.co/foto-preta.jpg"
                       />
                     </div>
-                    <div className="w-40">
-                      <label className="block text-xs text-gray-500 mb-1">Cor</label>
-                      <input
-                        type="text"
-                        value={img.cor}
-                        onChange={(e) => atualizarImagem(index, 'cor', e.target.value)}
-                        className="w-full px-4 py-2 rounded-xl border-2 border-gray-200 focus:border-gray-900 outline-none text-sm"
-                        placeholder="Ex: Preto"
-                        list="cores-sugeridas"
-                      />
-                      <datalist id="cores-sugeridas">
-                        {coresSelecionadas.map(cor => (
-                          <option key={cor} value={cor} />
-                        ))}
-                      </datalist>
-                    </div>
-                    {imagens.length > 1 && (
-                      <button
-                        type="button"
-                        onClick={() => removerImagem(index)}
-                        className="mt-6 text-gray-400 hover:text-red-500 p-2"
-                      >
-                        ✕
-                      </button>
+                    {coresImagens.length > 1 && (
+                      <button type="button" onClick={() => removerCorImagem(index)} className="mt-6 text-gray-400 hover:text-red-500 p-2 text-lg">×</button>
                     )}
                   </div>
                 ))}
@@ -309,10 +250,10 @@ export default function NovoProduto() {
             {/* Descrição */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Descrição</label>
-              <textarea value={form.descricao} onChange={(e) => setForm({ ...form, descricao: e.target.value })} rows={4} className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-gray-900 outline-none text-sm resize-none" placeholder="Descreva o produto..." />
+              <textarea value={form.descricao} onChange={(e) => setForm({ ...form, descricao: e.target.value })} rows={3} className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-gray-900 outline-none text-sm resize-none" placeholder="Descreva o produto..." />
             </div>
 
-            {/* Opções */}
+            {/* Switches */}
             <div className="flex gap-8 pt-4 border-t border-gray-100">
               <label className="flex items-center gap-3 cursor-pointer">
                 <input type="checkbox" checked={form.em_estoque} onChange={(e) => setForm({ ...form, em_estoque: e.target.checked })} className="w-5 h-5 rounded" />
@@ -324,7 +265,7 @@ export default function NovoProduto() {
               </label>
             </div>
 
-            {/* Botões */}
+            {/* Salvar */}
             <div className="flex gap-4 pt-4">
               <button type="submit" disabled={salvando} className="bg-gray-900 text-white px-8 py-3 rounded-xl font-medium text-sm hover:bg-gray-800 transition-colors disabled:opacity-50">
                 {salvando ? 'Salvando...' : 'Salvar Produto'}
