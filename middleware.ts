@@ -1,11 +1,10 @@
-// middleware.ts
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
 export function middleware(request: NextRequest) {
-  const { pathname } = request.nextUrl
+  const pathname = request.nextUrl.pathname
 
-  // Proteger todas as rotas /admin exceto a página de login
+  // Se estiver acessando qualquer página admin (exceto a de login)
   if (pathname.startsWith('/admin') && pathname !== '/admin') {
     const authCookie = request.cookies.get('admin_logado')
 
@@ -19,5 +18,5 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: '/admin/:path*',
+  matcher: ['/admin/:path*'],
 }

@@ -4,7 +4,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 
-const SENHA_ADMIN = 'modemoda2026' // 🔴 TROQUE POR UMA SENHA FORTE
+const SENHA_ADMIN = '123123' // 🔴 TROQUE POR UMA SENHA FORTE
 
 export default function AdminLogin() {
   const [senha, setSenha] = useState('')
