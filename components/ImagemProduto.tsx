@@ -1,7 +1,7 @@
 // components/ImagemProduto.tsx
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 
 interface ImagemProdutoProps {
   produto: {
@@ -9,14 +9,22 @@ interface ImagemProdutoProps {
     cores: string[]
     produto_imagens: { url: string; alt_text: string; cor?: string | null }[]
   }
+  corSelecionada?: string
 }
 
-export default function ImagemProduto({ produto }: ImagemProdutoProps) {
-  const [corAtiva, setCorAtiva] = useState(produto.cores?.[0] || '')
+export default function ImagemProduto({ produto, corSelecionada }: ImagemProdutoProps) {
+  const [corAtiva, setCorAtiva] = useState(corSelecionada || produto.cores?.[0] || '')
   const imagens = produto.produto_imagens || []
+
+  useEffect(() => {
+    if (corSelecionada) {
+      setCorAtiva(corSelecionada)
+    }
+  }, [corSelecionada])
 
   const imagemAtual = 
     imagens.find(img => img.cor?.toLowerCase() === corAtiva?.toLowerCase())?.url ||
+    imagens.find(img => img.alt_text?.toLowerCase().includes(corAtiva?.toLowerCase()))?.url ||
     imagens[0]?.url ||
     '/placeholder.jpg'
 
@@ -26,7 +34,7 @@ export default function ImagemProduto({ produto }: ImagemProdutoProps) {
         <img
           src={imagemAtual}
           alt={`${produto.nome} - ${corAtiva}`}
-          className="w-full h-full object-cover"
+          className="w-full h-full object-cover transition-all duration-300"
         />
       </div>
 
