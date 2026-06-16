@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import './globals.css'
 import Cabecalho from '@/components/Cabecalho'
 import Rodape from '@/components/Rodape'
+import MetaPixel from '@/components/MetaPixel'
 
 export const metadata: Metadata = {
   title: {
@@ -19,6 +20,7 @@ export default function RootLayout({
   return (
     <html lang="pt-BR">
       <body className="bg-white text-gray-900 antialiased" style={{ fontFamily: 'Arial, Helvetica, sans-serif' }}>
+         <MetaPixel />
         <Cabecalho />
         <div className="min-h-screen">
           {children}
